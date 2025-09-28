@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>Tetris Game - Mobile</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier New', monospace;
+            color: white;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .game-board {
+            border: 3px solid #fff;
+            background: #000;
+            position: relative;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .score-panel, .next-panel, .controls-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .score-panel h2, .next-panel h2, .controls-panel h2 {
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .next-piece {
+            border: 2px solid #444;
+            background: #000;
+            margin: 10px auto;
+        }
+
+        .controls {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .controls div {
+            margin: 5px 0;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            border: 3px solid #ff4757;
+            display: none;
+        }
+
+        .game-over h2 {
+            color: #ff4757;
+            margin: 0 0 20px 0;
+        }
+
+        .restart-btn {
+            background: #2ed573;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-family: inherit;
+        }
+
+        .restart-btn:hover {
+            background: #26d769;
+        }
+
+        /* Touch Controls */
+        .touch-controls {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 20px;
+            min-width: 60px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        .control-btn.rotate-btn {
+            border-radius: 50%;
+            background: rgba(46, 213, 115, 0.3);
+            border-color: rgba(46, 213, 115, 0.6);
+        }
+
+        .control-btn.rotate-btn:active {
+            background: rgba(46, 213, 115, 0.6);
+        }
+
+        .control-btn.pause-btn {
+            background: rgba(255, 71, 87, 0.3);
+            border-color: rgba(255, 71, 87, 0.6);
+        }
+
+        .control-btn.pause-btn:active {
+            background: rgba(255, 71, 87, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            body {
+                padding: 10px;
+                min-height: 100vh;
+            }
+
+            .game-board {
+                transform: scale(0.8);
+                transform-origin: center;
+            }
+
+            .sidebar {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .score-panel, .next-panel, .controls-panel {
+                padding: 15px;
+                margin: 5px;
+                flex: 1;
+                min-width: 150px;
+            }
+
+            .touch-controls {
+                display: block;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .controls-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                transform: scale(0.7);
+            }
+
+            .sidebar {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .score-panel, .next-panel {
+                max-width: 200px;
+            }
+
+            .control-btn {
+                min-width: 50px;
+                min-height: 50px;
+                padding: 12px 15px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-board-container">
+            <canvas id="gameCanvas" class="game-board" width="300" height="600"></canvas>
+            <div id="gameOver" class="game-over">
+                <h2>Game Over!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Lines Cleared: <span id="finalLines">0</span></p>
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="score-panel">
+                <h2>Score</h2>
+                <div class="score-item">
+                    <span>Score:</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="score-item">
+                    <span>Lines:</span>
+                    <span id="lines">0</span>
+                </div>
+                <div class="score-item">
+                    <span>Level:</span>
+                    <span id="level">1</span>
+                </div>
+            </div>
+            
+            <div class="next-panel">
+                <h2>Next</h2>
+                <canvas id="nextCanvas" class="next-piece" width="120" height="120"></canvas>
+            </div>
+            
+            <div class="controls-panel">
+                <h2>Controls</h2>
+                <div class="controls">
+                    <div><strong>←/→</strong> Move</div>
+                    <div><strong>↓</strong> Soft Drop</div>
+                    <div><strong>↑/Space</strong> Rotate</div>
+                    <div><strong>P</strong> Pause</div>
+                    <div><strong>R</strong> Restart</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Touch Controls for Mobile -->
+        <div id="touchControls" class="touch-controls">
+            <div style="text-align: center; margin-bottom: 10px; font-size: 14px; color: #ccc;">
+                Tap game board to rotate • Swipe to move • Swipe down for soft drop
+            </div>
+            <div class="control-row">
+                <button class="control-btn rotate-btn" id="rotateBtn">↻</button>
+                <button class="control-btn pause-btn" id="pauseBtn">⏸</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="leftBtn">←</button>
+                <button class="control-btn" id="downBtn">↓</button>
+                <button class="control-btn" id="rightBtn">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="tetris.js"></script>
+</body>
+</html>
