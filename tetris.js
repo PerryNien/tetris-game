@@ -461,6 +461,9 @@ class TetrisGame {
         this.gameLoop();
         
         this.updateDisplay();
+        
+        // Ensure mobile audio button shows correct initial state
+        this.updateMobileAudioButton();
     }
     
     setupControls() {
@@ -821,7 +824,7 @@ class TetrisGame {
         
         if (!this.audioManager || !this.audioManager.audioContext) {
             enableAudioBtn.textContent = '🔇';
-            enableAudioBtn.className = 'control-btn audio-btn';
+            enableAudioBtn.className = 'control-btn audio-btn muted';
             enableAudioBtn.style.display = 'none';
         } else if (!this.audioManager.isAudioInitialized) {
             // Show as muted initially since audio is not enabled
