@@ -443,18 +443,21 @@
             <div style="text-align: center; margin-bottom: 10px; font-size: 14px; color: #ccc;">
                 Tap game board to rotate • Swipe to move • Swipe down for soft drop
             </div>
+            <!-- Game control buttons row -->
             <div class="control-row">
-                <button class="control-btn rotate-btn" id="rotateBtn">↻</button>
-                <button class="control-btn pause-btn" id="pauseBtn">⏸</button>
-                <button class="control-btn restart-btn" id="restartMobileBtn">🔄</button>
+                <button class="control-btn restart-btn" id="restartMobileBtn" title="Restart Game">🔄</button>
+                <button class="control-btn pause-btn" id="pauseBtn" title="Pause/Resume">⏸</button>
+                <button class="control-btn audio-btn" id="enableAudioBtn" title="Audio Control">🔇</button>
             </div>
+            <!-- Movement control buttons row -->
             <div class="control-row">
-                <button class="control-btn" id="leftBtn">←</button>
-                <button class="control-btn" id="downBtn">↓</button>
-                <button class="control-btn" id="rightBtn">→</button>
+                <button class="control-btn" id="leftBtn" title="Move Left">←</button>
+                <button class="control-btn rotate-btn" id="rotateBtn" title="Rotate">↻</button>
+                <button class="control-btn" id="rightBtn" title="Move Right">→</button>
             </div>
+            <!-- Soft drop button row -->
             <div class="control-row">
-                <button class="control-btn audio-btn" id="enableAudioBtn" title="Audio Control">🔊</button>
+                <button class="control-btn" id="downBtn" title="Soft Drop">↓</button>
             </div>
         </div>
     </div>

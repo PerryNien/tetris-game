@@ -30,11 +30,18 @@ A modern, responsive Tetris game built with pure JavaScript and HTML5 Canvas.
 - **Swipe Left/Right**: Move piece
 - **Swipe Down**: Soft drop
 - **Touch Controls**: Use the on-screen buttons
-  - **↻**: Rotate piece
-  - **⏸/▶**: Pause/Resume game  
+  
+  **Game Control Row:**
   - **🔄**: Restart game
+  - **⏸/▶**: Pause/Resume game  
   - **🔇/🔊**: Audio control (enable/mute toggle)
-  - **←/→**: Move left/right
+  
+  **Movement Control Row:**
+  - **←**: Move left
+  - **↻**: Rotate piece
+  - **→**: Move right
+  
+  **Soft Drop Row:**
   - **↓**: Soft drop
 
 ### Audio Controls
