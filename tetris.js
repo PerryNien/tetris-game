@@ -707,40 +707,45 @@ class TetrisGame {
 
         // Enable audio button for mobile (also works as mute toggle)
         if (enableAudioBtn) {
-            enableAudioBtn.addEventListener('touchstart', (e) => {
+            // Use more reliable event handling for audio button
+            enableAudioBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.handleMobileAudioButton();
-                }
+                this.handleMobileAudioButton();
             }, { passive: false });
 
             enableAudioBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.handleMobileAudioButton();
-                }
+                this.handleMobileAudioButton();
             });
+            
+            // Also try touchstart as backup
+            enableAudioBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
         }
 
         // Restart button for mobile
         if (restartMobileBtn) {
-            restartMobileBtn.addEventListener('touchstart', (e) => {
+            restartMobileBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.restartGame();
-                }
+                this.restartGame();
             }, { passive: false });
 
             restartMobileBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.restartGame();
-                }
+                this.restartGame();
             });
+            
+            // Also try touchstart as backup
+            restartMobileBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
         }
     }
 
@@ -790,17 +795,19 @@ class TetrisGame {
             restartBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.restartGame();
-                }
+                this.restartGame();
             });
             
+            restartBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.restartGame();
+            }, { passive: false });
+            
+            // Also try touchstart as backup
             restartBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (this.canProcessTouch()) {
-                    this.restartGame();
-                }
             }, { passive: false });
         }
         
