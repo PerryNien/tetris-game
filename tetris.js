@@ -1,3 +1,262 @@
+// Audio Manager Class
+class AudioManager {
+    constructor() {
+        this.audioContext = null;
+        this.masterVolume = 0.7;
+        this.musicVolume = 0.5;
+        this.sfxVolume = 0.8;
+        this.isMuted = false;
+        
+        // Initialize audio context
+        this.initAudioContext();
+        
+        // Generate audio buffers for different sounds
+        this.sounds = {};
+        this.generateSounds();
+        
+        // Background music
+        this.bgMusic = null;
+        this.createBackgroundMusic();
+    }
+    
+    initAudioContext() {
+        try {
+            // Create audio context
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioContext();
+            
+            // Create master gain node
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.connect(this.audioContext.destination);
+            this.masterGain.gain.value = this.masterVolume;
+            
+            // Create separate gain nodes for music and sound effects
+            this.musicGain = this.audioContext.createGain();
+            this.musicGain.connect(this.masterGain);
+            this.musicGain.gain.value = this.musicVolume;
+            
+            this.sfxGain = this.audioContext.createGain();
+            this.sfxGain.connect(this.masterGain);
+            this.sfxGain.gain.value = this.sfxVolume;
+        } catch (error) {
+            console.warn('Web Audio API not supported:', error);
+            this.audioContext = null;
+        }
+    }
+    
+    generateSounds() {
+        if (!this.audioContext) return;
+        
+        // Generate different tones for game events
+        this.sounds = {
+            move: this.createTone(220, 0.1, 'sine'),
+            rotate: this.createTone(330, 0.1, 'square'),
+            drop: this.createTone(165, 0.2, 'triangle'),
+            lineClear: this.createTone(440, 0.3, 'sawtooth'),
+            tetris: this.createChord([440, 554, 659], 0.5, 'sine'),
+            levelUp: this.createChord([523, 659, 784], 0.4, 'triangle'),
+            gameOver: this.createGameOverSound(),
+            pause: this.createTone(294, 0.2, 'square')
+        };
+    }
+    
+    createTone(frequency, duration, waveType = 'sine') {
+        if (!this.audioContext) return null;
+        
+        const buffer = this.audioContext.createBuffer(1, this.audioContext.sampleRate * duration, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < data.length; i++) {
+            const t = i / this.audioContext.sampleRate;
+            let value = 0;
+            
+            switch (waveType) {
+                case 'sine':
+                    value = Math.sin(2 * Math.PI * frequency * t);
+                    break;
+                case 'square':
+                    value = Math.sin(2 * Math.PI * frequency * t) > 0 ? 1 : -1;
+                    break;
+                case 'triangle':
+                    value = (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * frequency * t));
+                    break;
+                case 'sawtooth':
+                    value = 2 * (frequency * t - Math.floor(frequency * t + 0.5));
+                    break;
+            }
+            
+            // Apply envelope
+            const envelope = Math.exp(-t * 3) * (1 - Math.exp(-t * 50));
+            data[i] = value * envelope * 0.3;
+        }
+        
+        return buffer;
+    }
+    
+    createChord(frequencies, duration, waveType = 'sine') {
+        if (!this.audioContext) return null;
+        
+        const buffer = this.audioContext.createBuffer(1, this.audioContext.sampleRate * duration, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < data.length; i++) {
+            const t = i / this.audioContext.sampleRate;
+            let value = 0;
+            
+            frequencies.forEach(freq => {
+                switch (waveType) {
+                    case 'sine':
+                        value += Math.sin(2 * Math.PI * freq * t);
+                        break;
+                    case 'triangle':
+                        value += (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * freq * t));
+                        break;
+                }
+            });
+            
+            value /= frequencies.length;
+            
+            // Apply envelope
+            const envelope = Math.exp(-t * 2) * (1 - Math.exp(-t * 30));
+            data[i] = value * envelope * 0.2;
+        }
+        
+        return buffer;
+    }
+    
+    createGameOverSound() {
+        if (!this.audioContext) return null;
+        
+        const duration = 1.0;
+        const buffer = this.audioContext.createBuffer(1, this.audioContext.sampleRate * duration, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < data.length; i++) {
+            const t = i / this.audioContext.sampleRate;
+            
+            // Descending frequency sweep
+            const frequency = 440 * (1 - t * 0.8);
+            const value = Math.sin(2 * Math.PI * frequency * t);
+            
+            // Apply envelope
+            const envelope = Math.exp(-t * 1.5);
+            data[i] = value * envelope * 0.3;
+        }
+        
+        return buffer;
+    }
+    
+    createBackgroundMusic() {
+        if (!this.audioContext) return;
+        
+        // Create a simple background music loop
+        this.bgMusic = {
+            oscillators: [],
+            gainNodes: [],
+            isPlaying: false
+        };
+    }
+    
+    playSound(soundName) {
+        if (!this.audioContext || !this.sounds[soundName] || this.isMuted) return;
+        
+        // Resume audio context if it's suspended (required for some browsers)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
+        const source = this.audioContext.createBufferSource();
+        source.buffer = this.sounds[soundName];
+        source.connect(this.sfxGain);
+        source.start();
+    }
+    
+    startBackgroundMusic() {
+        if (!this.audioContext || this.bgMusic.isPlaying || this.isMuted) return;
+        
+        // Simple chord progression for background music
+        const notes = [
+            { freq: 220, duration: 2 }, // A
+            { freq: 246, duration: 2 }, // B
+            { freq: 196, duration: 2 }, // G
+            { freq: 220, duration: 2 }  // A
+        ];
+        
+        let noteIndex = 0;
+        
+        const playNextNote = () => {
+            if (!this.bgMusic.isPlaying) return;
+            
+            const note = notes[noteIndex];
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.frequency.setValueAtTime(note.freq, this.audioContext.currentTime);
+            oscillator.type = 'triangle';
+            
+            gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, this.audioContext.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.duration - 0.1);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.musicGain);
+            
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + note.duration);
+            
+            noteIndex = (noteIndex + 1) % notes.length;
+            
+            setTimeout(playNextNote, note.duration * 1000);
+        };
+        
+        this.bgMusic.isPlaying = true;
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        playNextNote();
+    }
+    
+    stopBackgroundMusic() {
+        this.bgMusic.isPlaying = false;
+    }
+    
+    setMasterVolume(volume) {
+        this.masterVolume = volume;
+        if (this.masterGain) {
+            this.masterGain.gain.value = this.isMuted ? 0 : volume;
+        }
+    }
+    
+    setMusicVolume(volume) {
+        this.musicVolume = volume;
+        if (this.musicGain) {
+            this.musicGain.gain.value = volume;
+        }
+    }
+    
+    setSfxVolume(volume) {
+        this.sfxVolume = volume;
+        if (this.sfxGain) {
+            this.sfxGain.gain.value = volume;
+        }
+    }
+    
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.masterGain) {
+            this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
+        }
+        
+        if (this.isMuted) {
+            this.stopBackgroundMusic();
+        } else {
+            this.startBackgroundMusic();
+        }
+        
+        return this.isMuted;
+    }
+}
+
 // Tetris Game Implementation
 class TetrisGame {
     constructor() {
@@ -11,6 +270,9 @@ class TetrisGame {
         this.ctx = this.canvas.getContext('2d');
         this.nextCanvas = document.getElementById('nextCanvas');
         this.nextCtx = this.nextCanvas.getContext('2d');
+        
+        // Audio system
+        this.audioManager = new AudioManager();
         
         // Game state
         this.board = [];
@@ -96,6 +358,10 @@ class TetrisGame {
         
         // Setup event listeners
         this.setupControls();
+        this.setupAudioControls();
+        
+        // Start background music
+        this.audioManager.startBackgroundMusic();
         
         // Start game loop
         this.gameRunning = true;
@@ -132,6 +398,10 @@ class TetrisGame {
                 case 'r':
                 case 'R':
                     this.restartGame();
+                    break;
+                case 'm':
+                case 'M':
+                    this.toggleMute();
                     break;
             }
             e.preventDefault();
@@ -317,6 +587,53 @@ class TetrisGame {
         });
     }
 
+    setupAudioControls() {
+        // Master volume control
+        const masterVolumeSlider = document.getElementById('masterVolume');
+        const masterVolumeValue = document.getElementById('masterVolumeValue');
+        
+        masterVolumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            this.audioManager.setMasterVolume(volume);
+            masterVolumeValue.textContent = e.target.value + '%';
+        });
+        
+        // Music volume control
+        const musicVolumeSlider = document.getElementById('musicVolume');
+        const musicVolumeValue = document.getElementById('musicVolumeValue');
+        
+        musicVolumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            this.audioManager.setMusicVolume(volume);
+            musicVolumeValue.textContent = e.target.value + '%';
+        });
+        
+        // SFX volume control
+        const sfxVolumeSlider = document.getElementById('sfxVolume');
+        const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+        
+        sfxVolumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            this.audioManager.setSfxVolume(volume);
+            sfxVolumeValue.textContent = e.target.value + '%';
+        });
+        
+        // Mute button
+        const muteBtn = document.getElementById('muteBtn');
+        muteBtn.addEventListener('click', () => {
+            this.toggleMute();
+        });
+    }
+
+    toggleMute() {
+        const isMuted = this.audioManager.toggleMute();
+        const muteBtn = document.getElementById('muteBtn');
+        if (muteBtn) {
+            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+            muteBtn.classList.toggle('muted', isMuted);
+        }
+    }
+
     startAutoMove(direction) {
         this.stopAutoMove(); // Clear any existing auto move
         
@@ -397,6 +714,11 @@ class TetrisGame {
         
         this.currentPiece.x += dx;
         this.currentPiece.y += dy;
+        
+        // Play move sound for horizontal movement
+        if (dx !== 0) {
+            this.audioManager.playSound('move');
+        }
     }
     
     rotatePiece() {
@@ -418,6 +740,9 @@ class TetrisGame {
         if (!kicked) {
             // Rotation not possible, revert
             this.currentPiece.shape = originalShape;
+        } else {
+            // Successful rotation, play sound
+            this.audioManager.playSound('rotate');
         }
     }
     
@@ -475,6 +800,9 @@ class TetrisGame {
         // Check for completed lines
         this.clearLines();
         
+        // Play drop sound
+        this.audioManager.playSound('drop');
+        
         // Spawn next piece
         this.spawnNewPiece();
         
@@ -497,6 +825,13 @@ class TetrisGame {
         if (linesCleared > 0) {
             this.lines += linesCleared;
             
+            // Play line clear sound
+            if (linesCleared === 4) {
+                this.audioManager.playSound('tetris'); // Tetris (4 lines)
+            } else {
+                this.audioManager.playSound('lineClear');
+            }
+            
             // Score calculation (traditional Tetris scoring)
             const points = [0, 40, 100, 300, 1200][linesCleared] * this.level;
             this.score += points;
@@ -506,6 +841,7 @@ class TetrisGame {
             if (newLevel > this.level) {
                 this.level = newLevel;
                 this.dropInterval = Math.max(50, 1000 - (this.level - 1) * 50);
+                this.audioManager.playSound('levelUp');
             }
         }
     }
@@ -663,11 +999,20 @@ class TetrisGame {
     
     togglePause() {
         this.gamePaused = !this.gamePaused;
+        this.audioManager.playSound('pause');
         this.updatePauseButton();
+        
+        if (this.gamePaused) {
+            this.audioManager.stopBackgroundMusic();
+        } else {
+            this.audioManager.startBackgroundMusic();
+        }
     }
     
     gameOver() {
         this.gameRunning = false;
+        this.audioManager.stopBackgroundMusic();
+        this.audioManager.playSound('gameOver');
         document.getElementById('finalScore').textContent = this.score.toLocaleString();
         document.getElementById('finalLines').textContent = this.lines;
         document.getElementById('gameOver').style.display = 'block';
@@ -675,6 +1020,7 @@ class TetrisGame {
     
     restartGame() {
         this.stopAutoMove(); // Clean up any running timers
+        this.audioManager.stopBackgroundMusic();
         this.score = 0;
         this.lines = 0;
         this.level = 1;

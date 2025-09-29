@@ -42,14 +42,14 @@
             gap: 20px;
         }
 
-        .score-panel, .next-panel, .controls-panel {
+        .score-panel, .next-panel, .controls-panel, .audio-panel {
             background: rgba(0, 0, 0, 0.3);
             padding: 20px;
             border-radius: 10px;
             border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
-        .score-panel h2, .next-panel h2, .controls-panel h2 {
+        .score-panel h2, .next-panel h2, .controls-panel h2, .audio-panel h2 {
             margin: 0 0 10px 0;
             text-align: center;
             color: #fff;
@@ -76,6 +76,78 @@
 
         .controls div {
             margin: 5px 0;
+        }
+
+        .audio-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .volume-control label {
+            min-width: 45px;
+            color: #fff;
+        }
+
+        .volume-control input[type="range"] {
+            flex: 1;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            border-radius: 10px;
+        }
+
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2ed573;
+            cursor: pointer;
+        }
+
+        .volume-control input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2ed573;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-control span {
+            min-width: 35px;
+            text-align: right;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .mute-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-self: center;
+        }
+
+        .mute-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .mute-btn.muted {
+            background: rgba(255, 71, 87, 0.3);
+            border-color: rgba(255, 71, 87, 0.6);
         }
 
         .game-over {
@@ -197,7 +269,7 @@
                 width: 100%;
             }
 
-            .score-panel, .next-panel, .controls-panel {
+            .score-panel, .next-panel, .controls-panel, .audio-panel {
                 padding: 15px;
                 margin: 5px;
                 flex: 1;
@@ -211,6 +283,10 @@
             }
 
             .controls-panel {
+                display: none;
+            }
+
+            .audio-panel {
                 display: none;
             }
         }
@@ -280,6 +356,29 @@
                     <div><strong>↑/Space</strong> Rotate</div>
                     <div><strong>P</strong> Pause</div>
                     <div><strong>R</strong> Restart</div>
+                    <div><strong>M</strong> Mute/Unmute</div>
+                </div>
+            </div>
+            
+            <div class="audio-panel">
+                <h2>Audio</h2>
+                <div class="audio-controls">
+                    <div class="volume-control">
+                        <label for="masterVolume">Master: </label>
+                        <input type="range" id="masterVolume" min="0" max="100" value="70">
+                        <span id="masterVolumeValue">70%</span>
+                    </div>
+                    <div class="volume-control">
+                        <label for="musicVolume">Music: </label>
+                        <input type="range" id="musicVolume" min="0" max="100" value="50">
+                        <span id="musicVolumeValue">50%</span>
+                    </div>
+                    <div class="volume-control">
+                        <label for="sfxVolume">SFX: </label>
+                        <input type="range" id="sfxVolume" min="0" max="100" value="80">
+                        <span id="sfxVolumeValue">80%</span>
+                    </div>
+                    <button id="muteBtn" class="mute-btn">🔊</button>
                 </div>
             </div>
         </div>
