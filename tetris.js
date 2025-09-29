@@ -471,7 +471,30 @@ class TetrisGame {
     setupControls() {
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
-            if (!this.gameRunning || this.gamePaused) return;
+            // Check if game is running first
+            if (!this.gameRunning) return;
+            
+            // Handle pause, restart, and mute even when game is paused
+            switch(e.key) {
+                case 'p':
+                case 'P':
+                    this.togglePause();
+                    e.preventDefault();
+                    return;
+                case 'r':
+                case 'R':
+                    this.restartGame();
+                    e.preventDefault();
+                    return;
+                case 'm':
+                case 'M':
+                    this.toggleMute();
+                    e.preventDefault();
+                    return;
+            }
+            
+            // Only handle game controls when not paused
+            if (this.gamePaused) return;
             
             switch(e.key) {
                 case 'ArrowLeft':
@@ -488,18 +511,6 @@ class TetrisGame {
                 case 'ArrowUp':
                 case ' ':
                     this.rotatePiece();
-                    break;
-                case 'p':
-                case 'P':
-                    this.togglePause();
-                    break;
-                case 'r':
-                case 'R':
-                    this.restartGame();
-                    break;
-                case 'm':
-                case 'M':
-                    this.toggleMute();
                     break;
             }
             e.preventDefault();
