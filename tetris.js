@@ -6,6 +6,8 @@ class AudioManager {
         this.musicVolume = 0.5;
         this.sfxVolume = 0.8;
         this.isMuted = false;
+        this.isAudioInitialized = false;
+        this.userInteracted = false;
         
         // Initialize audio context
         this.initAudioContext();
@@ -17,6 +19,9 @@ class AudioManager {
         // Background music
         this.bgMusic = null;
         this.createBackgroundMusic();
+        
+        // Setup user interaction listeners for mobile
+        this.setupUserInteractionListeners();
     }
     
     initAudioContext() {
@@ -41,6 +46,57 @@ class AudioManager {
         } catch (error) {
             console.warn('Web Audio API not supported:', error);
             this.audioContext = null;
+        }
+    }
+    
+    setupUserInteractionListeners() {
+        // List of events that can unlock audio on mobile
+        const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown', 'click'];
+        
+        const unlock = () => {
+            if (this.userInteracted) return;
+            
+            this.userInteracted = true;
+            this.initializeAudio();
+            
+            // Remove event listeners after first interaction
+            unlockEvents.forEach(event => {
+                document.removeEventListener(event, unlock, true);
+            });
+        };
+        
+        // Add event listeners for user interaction
+        unlockEvents.forEach(event => {
+            document.addEventListener(event, unlock, true);
+        });
+    }
+    
+    async initializeAudio() {
+        if (!this.audioContext || this.isAudioInitialized) return;
+        
+        try {
+            // Resume audio context if it's suspended
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
+            // Play a silent sound to unlock audio on mobile
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            gainNode.gain.setValueAtTime(0.001, this.audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
+            
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + 0.01);
+            
+            this.isAudioInitialized = true;
+            console.log('Audio initialized successfully');
+        } catch (error) {
+            console.warn('Failed to initialize audio:', error);
         }
     }
     
@@ -157,22 +213,51 @@ class AudioManager {
         };
     }
     
-    playSound(soundName) {
+    async playSound(soundName) {
         if (!this.audioContext || !this.sounds[soundName] || this.isMuted) return;
+        
+        // Ensure audio is initialized (important for mobile)
+        if (!this.isAudioInitialized && this.userInteracted) {
+            await this.initializeAudio();
+        }
         
         // Resume audio context if it's suspended (required for some browsers)
         if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            try {
+                await this.audioContext.resume();
+            } catch (error) {
+                console.warn('Failed to resume audio context:', error);
+                return;
+            }
         }
         
-        const source = this.audioContext.createBufferSource();
-        source.buffer = this.sounds[soundName];
-        source.connect(this.sfxGain);
-        source.start();
+        try {
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds[soundName];
+            source.connect(this.sfxGain);
+            source.start();
+        } catch (error) {
+            console.warn('Failed to play sound:', soundName, error);
+        }
     }
     
-    startBackgroundMusic() {
+    async startBackgroundMusic() {
         if (!this.audioContext || this.bgMusic.isPlaying || this.isMuted) return;
+        
+        // Ensure audio is initialized (important for mobile)
+        if (!this.isAudioInitialized && this.userInteracted) {
+            await this.initializeAudio();
+        }
+        
+        // Resume audio context if needed
+        if (this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+            } catch (error) {
+                console.warn('Failed to resume audio context for music:', error);
+                return;
+            }
+        }
         
         // Simple chord progression for background music
         const notes = [
@@ -187,32 +272,33 @@ class AudioManager {
         const playNextNote = () => {
             if (!this.bgMusic.isPlaying) return;
             
-            const note = notes[noteIndex];
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            
-            oscillator.frequency.setValueAtTime(note.freq, this.audioContext.currentTime);
-            oscillator.type = 'triangle';
-            
-            gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.05, this.audioContext.currentTime + 0.1);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.duration - 0.1);
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(this.musicGain);
-            
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + note.duration);
-            
-            noteIndex = (noteIndex + 1) % notes.length;
-            
-            setTimeout(playNextNote, note.duration * 1000);
+            try {
+                const note = notes[noteIndex];
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.frequency.setValueAtTime(note.freq, this.audioContext.currentTime);
+                oscillator.type = 'triangle';
+                
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.05, this.audioContext.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.duration - 0.1);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.musicGain);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + note.duration);
+                
+                noteIndex = (noteIndex + 1) % notes.length;
+                
+                setTimeout(playNextNote, note.duration * 1000);
+            } catch (error) {
+                console.warn('Error playing background music note:', error);
+            }
         };
         
         this.bgMusic.isPlaying = true;
-        if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
-        }
         playNextNote();
     }
     
@@ -254,6 +340,16 @@ class AudioManager {
         }
         
         return this.isMuted;
+    }
+    
+    getAudioState() {
+        return {
+            isSupported: !!this.audioContext,
+            isInitialized: this.isAudioInitialized,
+            userInteracted: this.userInteracted,
+            isMuted: this.isMuted,
+            contextState: this.audioContext ? this.audioContext.state : 'unavailable'
+        };
     }
 }
 
@@ -420,6 +516,12 @@ class TetrisGame {
             const touch = e.touches[0];
             startX = touch.clientX;
             startY = touch.clientY;
+            
+            // Try to initialize audio on first touch
+            if (!this.audioManager.isAudioInitialized && !this.audioManager.userInteracted) {
+                this.enableAudio();
+            }
+            
             e.preventDefault();
         }, { passive: false });
 
@@ -489,6 +591,7 @@ class TetrisGame {
         const downBtn = document.getElementById('downBtn');
         const rotateBtn = document.getElementById('rotateBtn');
         const pauseBtn = document.getElementById('pauseBtn');
+        const enableAudioBtn = document.getElementById('enableAudioBtn');
 
         // Left button
         leftBtn.addEventListener('touchstart', (e) => {
@@ -585,9 +688,27 @@ class TetrisGame {
             this.togglePause();
             this.updatePauseButton();
         });
+
+        // Enable audio button for mobile
+        if (enableAudioBtn) {
+            enableAudioBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.enableAudio();
+                this.updateMobileAudioButton();
+            });
+
+            enableAudioBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.enableAudio();
+                this.updateMobileAudioButton();
+            });
+        }
     }
 
     setupAudioControls() {
+        // Update audio status display
+        this.updateAudioStatus();
+        
         // Master volume control
         const masterVolumeSlider = document.getElementById('masterVolume');
         const masterVolumeValue = document.getElementById('masterVolumeValue');
@@ -623,6 +744,78 @@ class TetrisGame {
         muteBtn.addEventListener('click', () => {
             this.toggleMute();
         });
+        
+        // Audio status click to enable
+        const audioStatus = document.getElementById('audioStatus');
+        audioStatus.addEventListener('click', () => {
+            this.enableAudio();
+        });
+        
+        // Update audio status periodically
+        setInterval(() => {
+            this.updateAudioStatus();
+        }, 1000);
+    }
+    
+    async enableAudio() {
+        if (this.audioManager && !this.audioManager.isAudioInitialized) {
+            this.audioManager.userInteracted = true;
+            await this.audioManager.initializeAudio();
+            this.updateAudioStatus();
+            
+            // Start background music if not muted
+            if (!this.audioManager.isMuted && this.gameRunning && !this.gamePaused) {
+                this.audioManager.startBackgroundMusic();
+            }
+        }
+    }
+    
+    updateAudioStatus() {
+        const audioStatus = document.getElementById('audioStatus');
+        const audioStatusText = document.getElementById('audioStatusText');
+        
+        if (!audioStatus || !audioStatusText) return;
+        
+        if (!this.audioManager || !this.audioManager.audioContext) {
+            audioStatusText.textContent = '❌ Audio not supported';
+            audioStatus.className = 'audio-status disabled';
+        } else if (!this.audioManager.isAudioInitialized) {
+            audioStatusText.textContent = '🔊 Tap to enable audio';
+            audioStatus.className = 'audio-status';
+            audioStatus.style.cursor = 'pointer';
+        } else {
+            audioStatusText.textContent = '✅ Audio enabled';
+            audioStatus.className = 'audio-status enabled';
+            audioStatus.style.cursor = 'default';
+        }
+        
+        // Update mobile audio button
+        this.updateMobileAudioButton();
+    }
+
+    updateMobileAudioButton() {
+        const enableAudioBtn = document.getElementById('enableAudioBtn');
+        if (!enableAudioBtn) return;
+        
+        if (!this.audioManager || !this.audioManager.audioContext) {
+            enableAudioBtn.textContent = '🔇';
+            enableAudioBtn.className = 'control-btn audio-btn';
+            enableAudioBtn.style.display = 'none';
+        } else if (!this.audioManager.isAudioInitialized) {
+            enableAudioBtn.textContent = '🔊';
+            enableAudioBtn.className = 'control-btn audio-btn';
+            enableAudioBtn.style.display = 'flex';
+        } else {
+            enableAudioBtn.textContent = '✅';
+            enableAudioBtn.className = 'control-btn audio-btn enabled';
+            enableAudioBtn.style.display = 'flex';
+            // Hide the button after a few seconds when audio is enabled
+            setTimeout(() => {
+                if (enableAudioBtn && this.audioManager && this.audioManager.isAudioInitialized) {
+                    enableAudioBtn.style.display = 'none';
+                }
+            }, 3000);
+        }
     }
 
     toggleMute() {
