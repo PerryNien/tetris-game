@@ -386,6 +386,8 @@ class TetrisGame {
         // Touch controls
         this.autoMoveTimer = null;
         this.autoMoveInterval = null;
+        this.lastTouchTime = 0;
+        this.touchDelay = 100; // Minimum time between touch events
         
         // Tetris pieces (tetrominoes)
         this.pieces = {
@@ -566,15 +568,21 @@ class TetrisGame {
     }
 
     setupTouchControls() {
-        // Prevent default touch behaviors
+        // Prevent default touch behaviors and improve touch responsiveness
         document.addEventListener('touchstart', (e) => {
-            if (e.target.classList.contains('control-btn')) {
+            if (e.target.closest('.control-btn') || e.target.closest('.restart-btn') || e.target.closest('.mute-btn')) {
                 e.preventDefault();
             }
         }, { passive: false });
 
         document.addEventListener('touchmove', (e) => {
-            if (e.target.classList.contains('control-btn')) {
+            if (e.target.closest('.control-btn') || e.target.closest('.restart-btn') || e.target.closest('.mute-btn')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (e.target.closest('.control-btn') || e.target.closest('.restart-btn') || e.target.closest('.mute-btn')) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -586,69 +594,79 @@ class TetrisGame {
         const rotateBtn = document.getElementById('rotateBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const enableAudioBtn = document.getElementById('enableAudioBtn');
+        const restartMobileBtn = document.getElementById('restartMobileBtn');
 
         // Left button
         leftBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(-1, 0);
                 this.startAutoMove('left');
             }
-        });
+        }, { passive: false });
 
         leftBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.stopAutoMove();
-        });
+        }, { passive: false });
 
         // Right button
         rightBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(1, 0);
                 this.startAutoMove('right');
             }
-        });
+        }, { passive: false });
 
         rightBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.stopAutoMove();
-        });
+        }, { passive: false });
 
         // Down button (soft drop)
         downBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(0, 1);
                 this.score += 1;
                 this.updateDisplay();
                 this.startAutoMove('down');
             }
-        });
+        }, { passive: false });
 
         downBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.stopAutoMove();
-        });
+        }, { passive: false });
 
         // Rotate button
         rotateBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.rotatePiece();
             }
-        });
+        }, { passive: false });
 
         // Pause button
         pauseBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.togglePause();
             this.updatePauseButton();
-        });
+        }, { passive: false });
 
         // Also add click events for desktop testing
         leftBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(-1, 0);
             }
@@ -656,6 +674,7 @@ class TetrisGame {
 
         rightBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(1, 0);
             }
@@ -663,6 +682,7 @@ class TetrisGame {
 
         downBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.movePiece(0, 1);
                 this.score += 1;
@@ -672,6 +692,7 @@ class TetrisGame {
 
         rotateBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (this.gameRunning && !this.gamePaused) {
                 this.rotatePiece();
             }
@@ -679,6 +700,7 @@ class TetrisGame {
 
         pauseBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.togglePause();
             this.updatePauseButton();
         });
@@ -687,12 +709,37 @@ class TetrisGame {
         if (enableAudioBtn) {
             enableAudioBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                this.handleMobileAudioButton();
-            });
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.handleMobileAudioButton();
+                }
+            }, { passive: false });
 
             enableAudioBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.handleMobileAudioButton();
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.handleMobileAudioButton();
+                }
+            });
+        }
+
+        // Restart button for mobile
+        if (restartMobileBtn) {
+            restartMobileBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.restartGame();
+                }
+            }, { passive: false });
+
+            restartMobileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.restartGame();
+                }
             });
         }
     }
@@ -736,6 +783,26 @@ class TetrisGame {
         muteBtn.addEventListener('click', () => {
             this.toggleMute();
         });
+        
+        // Game over restart button
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.restartGame();
+                }
+            });
+            
+            restartBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.canProcessTouch()) {
+                    this.restartGame();
+                }
+            }, { passive: false });
+        }
         
         // Audio status click to enable
         const audioStatus = document.getElementById('audioStatus');
@@ -789,6 +856,16 @@ class TetrisGame {
             this.toggleMute();
         }
         this.updateMobileAudioButton();
+    }
+
+    // Throttle touch events to prevent rapid firing
+    canProcessTouch() {
+        const now = Date.now();
+        if (now - this.lastTouchTime < this.touchDelay) {
+            return false;
+        }
+        this.lastTouchTime = now;
+        return true;
     }
     
     updateAudioStatus() {

@@ -30,7 +30,12 @@ A modern, responsive Tetris game built with pure JavaScript and HTML5 Canvas.
 - **Swipe Left/Right**: Move piece
 - **Swipe Down**: Soft drop
 - **Touch Controls**: Use the on-screen buttons
-- **🔇 Audio Button**: Tap to enable audio (starts muted by default)
+  - **↻**: Rotate piece
+  - **⏸/▶**: Pause/Resume game  
+  - **🔄**: Restart game
+  - **🔇/🔊**: Audio control (enable/mute toggle)
+  - **←/→**: Move left/right
+  - **↓**: Soft drop
 
 ### Audio Controls
 - **Volume Sliders**: Adjust master volume, background music, and sound effects separately

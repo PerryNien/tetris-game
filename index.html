@@ -288,6 +288,15 @@
             border-color: rgba(255, 71, 87, 0.6) !important;
         }
 
+        .control-btn.restart-btn {
+            background: rgba(255, 165, 0, 0.3);
+            border-color: rgba(255, 165, 0, 0.6);
+        }
+
+        .control-btn.restart-btn:active {
+            background: rgba(255, 165, 0, 0.6);
+        }
+
         @media (max-width: 768px) {
             .game-container {
                 flex-direction: column;
@@ -365,7 +374,7 @@
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
                 <p>Lines Cleared: <span id="finalLines">0</span></p>
-                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+                <button class="restart-btn" id="restartBtn">Play Again</button>
             </div>
         </div>
         
@@ -437,12 +446,15 @@
             <div class="control-row">
                 <button class="control-btn rotate-btn" id="rotateBtn">↻</button>
                 <button class="control-btn pause-btn" id="pauseBtn">⏸</button>
-                <button class="control-btn audio-btn" id="enableAudioBtn" title="Audio Control">🔊</button>
+                <button class="control-btn restart-btn" id="restartMobileBtn">🔄</button>
             </div>
             <div class="control-row">
                 <button class="control-btn" id="leftBtn">←</button>
                 <button class="control-btn" id="downBtn">↓</button>
                 <button class="control-btn" id="rightBtn">→</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn audio-btn" id="enableAudioBtn" title="Audio Control">🔊</button>
             </div>
         </div>
     </div>
