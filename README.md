@@ -30,13 +30,14 @@ A modern, responsive Tetris game built with pure JavaScript and HTML5 Canvas.
 - **Swipe Left/Right**: Move piece
 - **Swipe Down**: Soft drop
 - **Touch Controls**: Use the on-screen buttons
-- **🔊 Audio Button**: Tap to enable audio, then use as mute/unmute toggle
+- **🔇 Audio Button**: Tap to enable audio (starts muted by default)
 
 ### Audio Controls
 - **Volume Sliders**: Adjust master volume, background music, and sound effects separately
-- **Mute Button**: Instantly mute/unmute all audio
+- **Mute Button**: Instantly mute/unmute all audio (defaults to muted)
 - **Keyboard Shortcut**: Press 'M' to toggle mute on desktop
-- **Mobile Audio Button**: Persistent audio control - enable first, then toggle mute/unmute
+- **Mobile Audio Button**: Tap 🔇 to enable and unmute audio, then use as mute/unmute toggle
+- **Default State**: Audio starts muted - users must manually enable it
 
 ## Play Online
 
@@ -73,9 +74,9 @@ This Tetris game includes a comprehensive audio system with **full mobile device
 - **Volume Controls**: Separate sliders for master volume, music, and sound effects
 - **Mute Functionality**: Quick mute/unmute with visual feedback
 - **Mobile Audio Support**: 
-  - Automatic audio unlock on first user interaction
+  - Audio starts muted by default for better user experience
   - Persistent audio control button in touch controls (enable → mute toggle)
-  - Audio status indicator
+  - Audio status indicator shows current state
   - Optimized for iOS and Android browsers
 
 All audio is generated using the Web Audio API, ensuring compatibility across modern browsers and providing crisp, retro-style game sounds. The game automatically handles mobile browser audio restrictions and provides clear feedback when audio needs to be enabled.

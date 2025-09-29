@@ -5,7 +5,7 @@ class AudioManager {
         this.masterVolume = 0.7;
         this.musicVolume = 0.5;
         this.sfxVolume = 0.8;
-        this.isMuted = false;
+        this.isMuted = true; // Default to muted
         this.isAudioInitialized = false;
         this.userInteracted = false;
         
@@ -456,9 +456,6 @@ class TetrisGame {
         this.setupControls();
         this.setupAudioControls();
         
-        // Start background music
-        this.audioManager.startBackgroundMusic();
-        
         // Start game loop
         this.gameRunning = true;
         this.gameLoop();
@@ -516,12 +513,6 @@ class TetrisGame {
             const touch = e.touches[0];
             startX = touch.clientX;
             startY = touch.clientY;
-            
-            // Try to initialize audio on first touch
-            if (!this.audioManager.isAudioInitialized && !this.audioManager.userInteracted) {
-                this.enableAudio();
-            }
-            
             e.preventDefault();
         }, { passive: false });
 
@@ -759,12 +750,21 @@ class TetrisGame {
         if (this.audioManager && !this.audioManager.isAudioInitialized) {
             this.audioManager.userInteracted = true;
             await this.audioManager.initializeAudio();
+            
+            // Also unmute audio when enabling for the first time
+            if (this.audioManager.isMuted) {
+                this.audioManager.toggleMute();
+            }
+            
             this.updateAudioStatus();
             
             // Start background music if not muted
             if (!this.audioManager.isMuted && this.gameRunning && !this.gamePaused) {
                 this.audioManager.startBackgroundMusic();
             }
+        } else if (this.audioManager && this.audioManager.isAudioInitialized && this.audioManager.isMuted) {
+            // If audio is initialized but muted, unmute it
+            this.toggleMute();
         }
     }
 
@@ -774,8 +774,13 @@ class TetrisGame {
         }
 
         if (!this.audioManager.isAudioInitialized) {
-            // Audio not initialized yet - enable it
-            this.enableAudio();
+            // Audio not initialized yet - enable it and unmute
+            this.enableAudio().then(() => {
+                // After enabling audio, also unmute it
+                if (this.audioManager.isMuted) {
+                    this.toggleMute();
+                }
+            });
         } else {
             // Audio is initialized - toggle mute
             this.toggleMute();
@@ -793,8 +798,12 @@ class TetrisGame {
             audioStatusText.textContent = '❌ Audio not supported';
             audioStatus.className = 'audio-status disabled';
         } else if (!this.audioManager.isAudioInitialized) {
-            audioStatusText.textContent = '🔊 Tap to enable audio';
-            audioStatus.className = 'audio-status';
+            audioStatusText.textContent = '🔇 Tap to enable audio';
+            audioStatus.className = 'audio-status disabled';
+            audioStatus.style.cursor = 'pointer';
+        } else if (this.audioManager.isMuted) {
+            audioStatusText.textContent = '🔇 Audio muted';
+            audioStatus.className = 'audio-status disabled';
             audioStatus.style.cursor = 'pointer';
         } else {
             audioStatusText.textContent = '✅ Audio enabled';
@@ -815,11 +824,12 @@ class TetrisGame {
             enableAudioBtn.className = 'control-btn audio-btn';
             enableAudioBtn.style.display = 'none';
         } else if (!this.audioManager.isAudioInitialized) {
-            enableAudioBtn.textContent = '🔊';
-            enableAudioBtn.className = 'control-btn audio-btn';
+            // Show as muted initially since audio is not enabled
+            enableAudioBtn.textContent = '🔇';
+            enableAudioBtn.className = 'control-btn audio-btn muted';
             enableAudioBtn.style.display = 'flex';
         } else {
-            // Audio is initialized - show as mute/unmute toggle
+            // Audio is initialized - show current mute state
             if (this.audioManager.isMuted) {
                 enableAudioBtn.textContent = '🔇';
                 enableAudioBtn.className = 'control-btn audio-btn muted';
