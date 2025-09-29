@@ -689,18 +689,16 @@ class TetrisGame {
             this.updatePauseButton();
         });
 
-        // Enable audio button for mobile
+        // Enable audio button for mobile (also works as mute toggle)
         if (enableAudioBtn) {
             enableAudioBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                this.enableAudio();
-                this.updateMobileAudioButton();
+                this.handleMobileAudioButton();
             });
 
             enableAudioBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.enableAudio();
-                this.updateMobileAudioButton();
+                this.handleMobileAudioButton();
             });
         }
     }
@@ -769,6 +767,21 @@ class TetrisGame {
             }
         }
     }
+
+    handleMobileAudioButton() {
+        if (!this.audioManager || !this.audioManager.audioContext) {
+            return;
+        }
+
+        if (!this.audioManager.isAudioInitialized) {
+            // Audio not initialized yet - enable it
+            this.enableAudio();
+        } else {
+            // Audio is initialized - toggle mute
+            this.toggleMute();
+        }
+        this.updateMobileAudioButton();
+    }
     
     updateAudioStatus() {
         const audioStatus = document.getElementById('audioStatus');
@@ -806,15 +819,15 @@ class TetrisGame {
             enableAudioBtn.className = 'control-btn audio-btn';
             enableAudioBtn.style.display = 'flex';
         } else {
-            enableAudioBtn.textContent = '✅';
-            enableAudioBtn.className = 'control-btn audio-btn enabled';
+            // Audio is initialized - show as mute/unmute toggle
+            if (this.audioManager.isMuted) {
+                enableAudioBtn.textContent = '🔇';
+                enableAudioBtn.className = 'control-btn audio-btn muted';
+            } else {
+                enableAudioBtn.textContent = '🔊';
+                enableAudioBtn.className = 'control-btn audio-btn enabled';
+            }
             enableAudioBtn.style.display = 'flex';
-            // Hide the button after a few seconds when audio is enabled
-            setTimeout(() => {
-                if (enableAudioBtn && this.audioManager && this.audioManager.isAudioInitialized) {
-                    enableAudioBtn.style.display = 'none';
-                }
-            }, 3000);
         }
     }
 
@@ -825,6 +838,9 @@ class TetrisGame {
             muteBtn.textContent = isMuted ? '🔇' : '🔊';
             muteBtn.classList.toggle('muted', isMuted);
         }
+        
+        // Also update mobile audio button
+        this.updateMobileAudioButton();
     }
 
     startAutoMove(direction) {

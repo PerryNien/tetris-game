@@ -283,6 +283,11 @@
             border-color: rgba(46, 213, 115, 0.6);
         }
 
+        .control-btn.audio-btn.muted {
+            background: rgba(255, 71, 87, 0.3);
+            border-color: rgba(255, 71, 87, 0.6);
+        }
+
         @media (max-width: 768px) {
             .game-container {
                 flex-direction: column;
@@ -432,7 +437,7 @@
             <div class="control-row">
                 <button class="control-btn rotate-btn" id="rotateBtn">↻</button>
                 <button class="control-btn pause-btn" id="pauseBtn">⏸</button>
-                <button class="control-btn audio-btn" id="enableAudioBtn">🔊</button>
+                <button class="control-btn audio-btn" id="enableAudioBtn" title="Audio Control">🔊</button>
             </div>
             <div class="control-row">
                 <button class="control-btn" id="leftBtn">←</button>
