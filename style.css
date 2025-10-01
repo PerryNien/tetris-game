@@ -1,0 +1,375 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Courier New', monospace;
+    color: white;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.game-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.game-board {
+    border: 3px solid #fff;
+    background: #000;
+    position: relative;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.score-panel, .next-panel, .controls-panel, .audio-panel {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.score-panel h2, .next-panel h2, .controls-panel h2, .audio-panel h2 {
+    margin: 0 0 10px 0;
+    text-align: center;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.next-piece {
+    border: 2px solid #444;
+    background: #000;
+    margin: 10px auto;
+}
+
+.controls {
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.controls div {
+    margin: 5px 0;
+}
+
+.audio-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.volume-control label {
+    min-width: 45px;
+    color: #fff;
+}
+
+.volume-control input[type="range"] {
+    flex: 1;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    border-radius: 10px;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2ed573;
+    cursor: pointer;
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2ed573;
+    cursor: pointer;
+    border: none;
+}
+
+.volume-control span {
+    min-width: 35px;
+    text-align: right;
+    color: #fff;
+    font-size: 12px;
+}
+
+.mute-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: center;
+}
+
+.mute-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.mute-btn.muted {
+    background: rgba(255, 71, 87, 0.3);
+    border-color: rgba(255, 71, 87, 0.6);
+}
+
+.audio-status {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.audio-status.enabled {
+    background: rgba(46, 213, 115, 0.2);
+    border-color: rgba(46, 213, 115, 0.4);
+}
+
+.audio-status.disabled {
+    background: rgba(255, 71, 87, 0.2);
+    border-color: rgba(255, 71, 87, 0.4);
+}
+
+#audioStatusText {
+    font-size: 12px;
+    color: #fff;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    border: 3px solid #ff4757;
+    display: none;
+}
+
+.game-over h2 {
+    color: #ff4757;
+    margin: 0 0 20px 0;
+}
+
+.restart-btn {
+    background: #2ed573;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-family: inherit;
+}
+
+.restart-btn:hover {
+    background: #26d769;
+}
+
+/* Touch Controls */
+.touch-controls {
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    margin-top: 20px;
+}
+
+.control-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 15px 20px;
+    min-width: 60px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
+}
+
+.control-btn:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.control-btn.rotate-btn {
+    border-radius: 50%;
+    background: rgba(46, 213, 115, 0.3);
+    border-color: rgba(46, 213, 115, 0.6);
+}
+
+.control-btn.rotate-btn:active {
+    background: rgba(46, 213, 115, 0.6);
+}
+
+.control-btn.pause-btn {
+    background: rgba(255, 165, 0, 0.3);
+    border-color: rgba(255, 165, 0, 0.6);
+    /* Same size and shape as restart button */
+    min-width: 60px;
+    min-height: 60px;
+    padding: 15px 20px;
+    border-radius: 10px;
+}
+
+.control-btn.pause-btn:active {
+    background: rgba(255, 165, 0, 0.6);
+}
+
+.control-btn.audio-btn {
+    background: rgba(255, 165, 0, 0.3);
+    border-color: rgba(255, 165, 0, 0.6);
+    /* Same size and shape as restart button */
+    min-width: 60px;
+    min-height: 60px;
+    padding: 15px 20px;
+    border-radius: 10px;
+}
+
+.control-btn.audio-btn:active {
+    background: rgba(255, 165, 0, 0.6);
+}
+
+.control-btn.audio-btn.enabled {
+    background: rgba(46, 213, 115, 0.3) !important;
+    border-color: rgba(46, 213, 115, 0.6) !important;
+}
+
+.control-btn.audio-btn.muted {
+    background: rgba(255, 165, 0, 0.3) !important;
+    border-color: rgba(255, 165, 0, 0.6) !important;
+}
+
+.control-btn.restart-btn {
+    background: rgba(255, 165, 0, 0.3) !important;
+    border-color: rgba(255, 165, 0, 0.6) !important;
+    border: 2px solid rgba(255, 165, 0, 0.6) !important;
+    /* Ensure exact same size as other control buttons */
+    min-width: 60px !important;
+    min-height: 60px !important;
+    padding: 15px 20px !important;
+    border-radius: 10px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    margin-top: 0 !important;
+}
+
+.control-btn.restart-btn:active {
+    background: rgba(255, 165, 0, 0.6) !important;
+}
+
+@media (max-width: 768px) {
+    .game-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    body {
+        padding: 10px;
+        min-height: 100vh;
+    }
+
+    .game-board {
+        transform: scale(0.8);
+        transform-origin: center;
+    }
+
+    .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .score-panel, .next-panel, .controls-panel, .audio-panel {
+        padding: 15px;
+        margin: 5px;
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .touch-controls {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .controls-panel {
+        display: none;
+    }
+
+    .audio-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-board {
+        transform: scale(0.7);
+    }
+
+    .sidebar {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .score-panel, .next-panel {
+        max-width: 200px;
+    }
+
+    .control-btn {
+        min-width: 50px !important;
+        min-height: 50px !important;
+        padding: 12px 15px !important;
+        font-size: 16px !important;
+    }
+}

@@ -876,15 +876,7 @@ class TetrisGame {
         this.updateMobileAudioButton();
     }
 
-    // Throttle touch events to prevent rapid firing
-    canProcessTouch() {
-        const now = Date.now();
-        if (now - this.lastTouchTime < this.touchDelay) {
-            return false;
-        }
-        this.lastTouchTime = now;
-        return true;
-    }
+
     
     updateAudioStatus() {
         const audioStatus = document.getElementById('audioStatus');
@@ -1248,7 +1240,7 @@ class TetrisGame {
         this.ctx.fillRect(pixelX + 1, pixelY + 1, this.BLOCK_SIZE - 2, 3);
         this.ctx.fillRect(pixelX + 1, pixelY + 1, 3, this.BLOCK_SIZE - 2);
         
-        this.ctx.fillStyle = this.darkenColor(color, 20);
+        this.ctx.fillStyle = this.lightenColor(color, -20);
         this.ctx.fillRect(pixelX + this.BLOCK_SIZE - 4, pixelY + 4, 3, this.BLOCK_SIZE - 4);
         this.ctx.fillRect(pixelX + 4, pixelY + this.BLOCK_SIZE - 4, this.BLOCK_SIZE - 4, 3);
     }
@@ -1287,25 +1279,17 @@ class TetrisGame {
     }
     
     lightenColor(color, amount) {
-        const usePound = color[0] === '#';
+        const usePound = color.startsWith('#');
         const col = usePound ? color.slice(1) : color;
+        const num = parseInt(col, 16);
+
+        const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+        const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+        const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+
+        const newColor = ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
         
-        const r = parseInt(col.substr(0, 2), 16);
-        const g = parseInt(col.substr(2, 2), 16);
-        const b = parseInt(col.substr(4, 2), 16);
-        
-        const newR = Math.min(255, r + amount);
-        const newG = Math.min(255, g + amount);
-        const newB = Math.min(255, b + amount);
-        
-        return (usePound ? '#' : '') + 
-               ((newR < 16 ? '0' : '') + newR.toString(16)) +
-               ((newG < 16 ? '0' : '') + newG.toString(16)) +
-               ((newB < 16 ? '0' : '') + newB.toString(16));
-    }
-    
-    darkenColor(color, amount) {
-        return this.lightenColor(color, -amount);
+        return (usePound ? '#' : '') + newColor;
     }
     
     updateDisplay() {
@@ -1357,10 +1341,3 @@ let game;
 window.addEventListener('load', () => {
     game = new TetrisGame();
 });
-
-// Global restart function for the button
-function restartGame() {
-    if (game) {
-        game.restartGame();
-    }
-}
